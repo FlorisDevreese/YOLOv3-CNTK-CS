@@ -87,7 +87,7 @@ namespace YOLOv3
             string scales = GetParameterValue<string>(netBlock, "scales", "net");
 
             // create the input variable
-            input = CNTKLib.InputVariable(new int[] { width, height, 3 }, DataType.Float, "0: input");
+            input = CNTKLib.InputVariable(new [] { width, height, 3 }, DataType.Float, "0: input");
             // todo is line below necessary?
             //var scaledInput = CNTKLib.ElementTimes(Constant.Scalar<float>(0.00390625f, device), input);
             networkLayers.Add(input);
@@ -104,7 +104,8 @@ namespace YOLOv3
 
                 if ("convolutional".Equals(type))
                 {
-                    // todo this implementation could differ from the documentation concerning the bias param.
+                    // WARNING: this implmentation isn't tested yet. It could also differ from the documentation concerning the bias param.
+
                     // get all parameters of the block
                     bool batchNormalize = GetParameterValue<bool>(block, "batch_normalize", type);
                     // the 'pad' config is ignored because it's always 1 (=true)
@@ -114,29 +115,42 @@ namespace YOLOv3
                     string activation = GetParameterValue<string>(block, "activation", type);
 
                     // add convolution
-                    var convParameter = new Parameter(new int[] { size, size, priorFilers, newFilters }, DataType.Float, CNTKLib.GlorotUniformInitializer(), device); // todo does this need a initializer?
-                    var newLayer = CNTKLib.Convolution(convParameter, priorLayer, new int[] { stride, stride, priorFilers });
+                    var convParameter = new Parameter(new [] { size, size, priorFilers, newFilters }, DataType.Float, CNTKLib.GlorotUniformInitializer(), device); // todo does this need a initializer?
+                    var newLayer = CNTKLib.Convolution(convParameter, priorLayer, new [] { stride, stride, priorFilers });
                     newLayer.SetName(i + ": Convolution");
 
                     // add batch normalization
                     if (batchNormalize)
                     {
-                        var biasParams = new Parameter(new int[] { NDShape.InferredDimension }, 0.0f, device, "");
-                        var scaleParams = new Parameter(new int[] { NDShape.InferredDimension }, 0.0f, device, "");
-                        var runningMean = new Constant(new int[] { NDShape.InferredDimension }, 0.0f, device);
-                        var runningInvStd = new Constant(new int[] { NDShape.InferredDimension }, 0.0f, device);
+                        var biasParams = new Parameter(new[] { NDShape.InferredDimension }, 0.0f, device, "");
+                        var scaleParams = new Parameter(new[] { NDShape.InferredDimension }, 0.0f, device, "");
+                        var runningMean = new Constant(new[] { NDShape.InferredDimension }, 0.0f, device);
+                        var runningInvStd = new Constant(new[] { NDShape.InferredDimension }, 0.0f, device);
                         var runningCount = Constant.Scalar(0.0f, device);
                         newLayer = CNTKLib.BatchNormalization(newLayer, scaleParams, biasParams, runningMean, runningInvStd, runningCount, true, bnTimeConst, 0.0, 1e-5 /* epsilon */);
                         newLayer.SetName(i + ": Batch normaization");
                     }
 
                     // add activation
-                    if("leaky".Equals(activation))
+                    if ("leaky".Equals(activation))
                     {
                         newLayer = CNTKLib.LeakyReLU(newLayer, leakReLuAplha, i + ": Activation");
                     }
 
                     networkLayers.Add(newLayer);
+                }
+                else if ("upsample".Equals(type))
+                {
+                    // get all parameters of the block
+                    int stride = GetParameterValue<int>(block, "stride", type);
+                    int priorWidht = priorLayer.Shape.Dimensions[1];
+                    int priorheight = priorLayer.Shape.Dimensions[1];
+
+                    // A correct implementation of bilinear upsampling in CNTK isn't found yet.
+                    // I suppose bilinear upsampling doesn't exist in CNTK. See: https://github.com/Microsoft/CNTK/issues/3045
+
+                    // todo continue work here: Found a way to do bilinear upsampling
+
                 }
                 else if ("shortcut".Equals(type))
                 {
@@ -145,17 +159,6 @@ namespace YOLOv3
                     string activation = GetParameterValue<string>(block, "activation", type);
 
                     // todo build the layer
-                    //CNTKLib.Plus()
-
-                }
-                else if ("upsample".Equals(type))
-                {
-                    // get all parameters of the block
-                    int stride = GetParameterValue<int>(block, "stride", type);
-
-                    // todo build the layer
-                    //CNTKLib.Reshape()
-                    // read https://stackoverflow.com/questions/43079648/cntk-how-to-define-upsampling2d
 
                 }
                 else if ("route".Equals(type))
@@ -164,7 +167,6 @@ namespace YOLOv3
                     string layers = GetParameterValue<string>(block, "layers", type);
 
                     // todo build the layer
-                    //CNTKLib.Combine()
 
                 }
                 else if ("yolo".Equals(type))
@@ -183,6 +185,8 @@ namespace YOLOv3
 
                 }
             }
+
+            //todo print out the builded network
 
             return networkLayers.LastOrDefault();
         }

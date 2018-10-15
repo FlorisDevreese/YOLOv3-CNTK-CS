@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2041
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YOLOv3", "YOLOv3\YOLOv3.csproj", "{D4369BFC-153D-4224-8352-34221EED65E2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{B5FD8D5E-3866-46A4-986A-36DB642BDA85}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +17,10 @@ Global
 		{D4369BFC-153D-4224-8352-34221EED65E2}.Debug|x64.Build.0 = Debug|x64
 		{D4369BFC-153D-4224-8352-34221EED65E2}.Release|x64.ActiveCfg = Release|x64
 		{D4369BFC-153D-4224-8352-34221EED65E2}.Release|x64.Build.0 = Release|x64
+		{B5FD8D5E-3866-46A4-986A-36DB642BDA85}.Debug|x64.ActiveCfg = Debug|x64
+		{B5FD8D5E-3866-46A4-986A-36DB642BDA85}.Debug|x64.Build.0 = Debug|x64
+		{B5FD8D5E-3866-46A4-986A-36DB642BDA85}.Release|x64.ActiveCfg = Release|Any CPU
+		{B5FD8D5E-3866-46A4-986A-36DB642BDA85}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
