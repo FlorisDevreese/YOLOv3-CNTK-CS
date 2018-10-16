@@ -9,6 +9,7 @@ namespace YOLOv3
         static void Main(string[] args)
         {
             // Explenation of YOLO v3 here: https://towardsdatascience.com/yolo-v3-object-detection-53fb7d3bfe6b
+            // Description of some implementation issues: https://itnext.io/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe
 
             // get device to run YOLO on
             var device = DeviceDescriptor.GPUDevice(0);

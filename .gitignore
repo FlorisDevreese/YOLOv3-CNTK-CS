@@ -3,3 +3,5 @@ YOLOv3/bin/*
 YOLOv3/obj/*
 Testing/bin/*
 Testing/obj/*
+ONNX model test app/bin/*
+ONNX model test app/obj/*
