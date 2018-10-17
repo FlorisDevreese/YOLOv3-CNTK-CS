@@ -7,6 +7,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:c="using:Template10.Converters"
       xmlns:local="using:ONNX_model_test_app.Views"
+      xmlns:converters="using:ONNX_model_test_app.Converters"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:vm="using:ONNX_model_test_app.ViewModels" mc:Ignorable="d">
 
@@ -38,6 +39,8 @@
                 <Visibility>Visible</Visibility>
             </c:ValueWhenConverter.Otherwise>
         </c:ValueWhenConverter>
+
+        <converters:VisibleWhenNullConverter x:Name="VisibleWhenNullConverter"/>
     </Page.Resources>
 
     <Interactivity:Interaction.Behaviors>
@@ -47,48 +50,106 @@
     </Interactivity:Interaction.Behaviors>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Pivot
+               RelativePanel.AlignBottomWithPanel="True"
+               RelativePanel.AlignLeftWithPanel="True"
+               RelativePanel.AlignTopWithPanel="True"
+               RelativePanel.AlignRightWithPanel="True">
+            <PivotItem Header="Webcam">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-        <Grid x:Name="SettingsGrid" Grid.Column="0" Margin="20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="20"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="200"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+                    <Grid x:Name="SettingsGrid" Grid.Column="0" Margin="20">
 
-            <TextBlock Text="Settings:" Grid.Row="0" Grid.ColumnSpan="3" FontSize="20" Margin="0 0 0 7"/>
-            
-            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0 7 25 7">
-                <SymbolIcon Symbol="Camera" Margin="0 0 5 0"/>
-                <TextBlock Text="Camera: "/>
-            </StackPanel>
-            <ComboBox x:Name="CameraComboBox" Grid.Row="1" Grid.Column="2" DisplayMemberPath="Name" PlaceholderText="choose camera" Width="200"
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="200"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Settings:" Grid.Row="0" Grid.ColumnSpan="3" FontSize="20" Margin="0 0 0 7"/>
+
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0 7 25 7">
+                            <SymbolIcon Symbol="Camera" Margin="0 0 5 0"/>
+                            <TextBlock Text="Camera: "/>
+                        </StackPanel>
+                        <ComboBox x:Name="CameraComboBox" Grid.Row="1" Grid.Column="2" DisplayMemberPath="Name" PlaceholderText="choose camera" Width="200"
                           ItemsSource="{x:Bind ViewModel.Devices, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedDevice, Mode=TwoWay}"/>
 
-            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0 7 25 7">
-                <SymbolIcon Symbol="Crop" Margin="0 0 5 0"/>
-                <TextBlock Text="Resolution: "/>
-            </StackPanel>
-            <ComboBox x:Name="ResolutionComboBox" Grid.Row="2" Grid.Column="2" DisplayMemberPath="Text" PlaceholderText="Choose resolution" Width="200" IsEnabled="False"
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0 7 25 7">
+                            <SymbolIcon Symbol="Crop" Margin="0 0 5 0"/>
+                            <TextBlock Text="Resolution: "/>
+                        </StackPanel>
+                        <ComboBox x:Name="ResolutionComboBox" Grid.Row="2" Grid.Column="2" DisplayMemberPath="Text" PlaceholderText="Choose resolution" Width="200" IsEnabled="False"
                           ItemsSource="{x:Bind ViewModel.Resolutions, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedResolution, Mode=OneWay}"/>
-        </Grid>
+                    </Grid>
 
-        <Grid Grid.Column="1" Background="Black">
-            <Viewbox Visibility="{x:Bind ViewModel.CameraInitialised, Converter={StaticResource CollapsedWhenTrueConverter}, Mode=OneWay}" Margin="40">
-                <SymbolIcon Symbol="Camera" Foreground="White"/>
-            </Viewbox>
-            <Viewbox Visibility="{x:Bind ViewModel.CameraInitialised, Converter={StaticResource CollapsedWhenFalseConverter}, Mode=OneWay}">
-                <CaptureElement x:Name="CameraPreviewElement"/>
-            </Viewbox>
-        </Grid>
+                    <Grid Grid.Column="1" Background="Black">
+                        <Viewbox Visibility="{x:Bind ViewModel.CameraInitialised, Converter={StaticResource CollapsedWhenTrueConverter}, Mode=OneWay}" Margin="40">
+                            <SymbolIcon Symbol="Camera" Foreground="White"/>
+                        </Viewbox>
+                        <Viewbox Visibility="{x:Bind ViewModel.CameraInitialised, Converter={StaticResource CollapsedWhenFalseConverter}, Mode=OneWay}">
+                            <CaptureElement x:Name="CameraPreviewElement"/>
+                        </Viewbox>
+                    </Grid>
+                </Grid>
+            </PivotItem>
+
+            <PivotItem Header="Image">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel x:Name="ControlBar" Grid.ColumnSpan="3" Orientation="Horizontal">
+                        <Button Click="{x:Bind ViewModel.OpenImageFromFile}" >
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox>
+                                    <SymbolIcon Symbol="OpenFile"  Margin="0 0 5 0"/>
+                                </Viewbox>
+                                <TextBlock Text="Load image" VerticalAlignment="Center" FontSize="20"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <Grid x:Name="OriginalImage" Grid.Row="1" Margin="0 0 0 10">
+                        <Image Source="{x:Bind viewModel.OriginalImage, Mode=OneWay}" Stretch="Uniform"/>
+                        <StackPanel Visibility="{x:Bind ViewModel.OriginalImage, Mode=OneWay, Converter={StaticResource VisibleWhenNullConverter}}" 
+                                Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center"> <!--placehoder-->
+                            <SymbolIcon Symbol="Contact"/>
+                            <TextBlock Text="No Image loaded yet" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <SymbolIcon Grid.Row="1" Grid.Column="1"  Symbol="Forward" Margin="20"/>
+
+                    <Grid x:Name="ModelOutput" Grid.Row="1" Grid.Column="2" Margin="0 0 0 10">
+                        <Image Source="{x:Bind ViewModel.ModelOutputImage, Mode=OneWay}" Stretch="Uniform"/>
+                        <StackPanel Visibility="{x:Bind ViewModel.ModelOutputImage, Mode=OneWay, Converter={StaticResource VisibleWhenNullConverter}}" 
+                                Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center"> <!--placehoder-->
+                            <SymbolIcon Symbol="More"/>
+                            <TextBlock Text="Nothing to process yet" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+
+
 
     </Grid>
 
