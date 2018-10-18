@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using Testing.Utils;
@@ -14,20 +15,16 @@ namespace Testing.Tests
         /// Tryout for different upsample functions
         /// </summary>
         /// <param name="device"></param>
-        public static void Test(string sampleFolderPath, DeviceDescriptor device)
+        public static Bitmap Test(Bitmap inputImage, DeviceDescriptor device)
         {
-            int width = 320;
-            int height = 320;
-            int channels = 3;
-
-            var input = CNTKLib.InputVariable(new[] { width, height, channels }, DataType.Float, "0: input");
+            var input = CNTKLib.InputVariable(new[] { 320, 320, 3 }, DataType.Float, "0: input");
 
             // upsampling approach 1 (from Frank), based on https://stackoverflow.com/questions/43079648/cntk-how-to-define-upsampling2d
             // this doesn't work. It enlarges the dimensions, but hoesn't upsample the image content. It just shows 4 times the original picture
-            //var xr = CNTKLib.Reshape(input, new[] { width, 1, height, 1, channels });
+            //var xr = CNTKLib.Reshape(input, new[] { 320, 1, 320, 1, 3 });
             //var xx = CNTKLib.Splice(new VariableVector(new Variable[] { xr, xr }), new Axis(3));
             //var xy = CNTKLib.Splice(new VariableVector(new Variable[] { xx, xx }), new Axis(1));
-            //var model = CNTKLib.Reshape(xy, new[] { width * 2, height * 2, channels });
+            //var model = CNTKLib.Reshape(xy, new[] { 320 * 2, 320 * 2, 3 });
 
             // upsampling approach 2 (from David), based on https://stackoverflow.com/questions/43079648/cntk-how-to-define-upsampling2d
             // this doesn't work eather. I can't figure out what the parameters of CNTKLib.ConcolutionTranspose(...) should be. More info here: https://github.com/Microsoft/CNTK/issues/2939
@@ -42,19 +39,11 @@ namespace Testing.Tests
             var modelInput = model.Arguments[0];
             var modelOutput = model.Output;
 
-            var validationMap = Path.Combine(sampleFolderPath, "val_map.txt");
-            var deserializerConfiguration = CNTKLib.ImageDeserializer(validationMap, "labels", (uint)2, "image");
-
-            MinibatchSourceConfig config = new MinibatchSourceConfig(new List<CNTKDictionary> { deserializerConfiguration });
-            MinibatchSource minibatchSource = CNTKLib.CreateCompositeMinibatchSource(config);
-
-            var featureStreamInfo = minibatchSource.StreamInfo("image");
-            var minibatchData = minibatchSource.GetNextMinibatch(1, device);
-            var inputDataMap = new Dictionary<Variable, Value>() { { modelInput, minibatchData[featureStreamInfo].data } };
+            var inputMap = Helper.CreateInputDataMap(inputImage, input, device);
             var outputDataMap = new Dictionary<Variable, Value>() { { modelOutput, null } };
 
             // Run the model
-            model.Evaluate(inputDataMap, outputDataMap, device);
+            model.Evaluate(inputMap, outputDataMap, device);
 
             // get the output of the model
             var output = outputDataMap[modelOutput];
@@ -63,10 +52,7 @@ namespace Testing.Tests
             var outputHeight = output.Shape.Dimensions[1];
 
             // Convert the output of the model into an image
-            var outputImage = Helper.CreateBitmapFromOutput(outputArray, outputWidth, outputHeight);
-
-            // write the image to file (so it can be manually checked)
-            outputImage.Save(Path.Join(sampleFolderPath, "upsample output.bmp"));
+            return Helper.CreateBitmapFromOutput(outputArray, outputWidth, outputHeight);
         }
     }
 }

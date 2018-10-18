@@ -1,6 +1,7 @@
 ﻿using CNTK;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using Testing.Tests;
 
@@ -18,7 +19,11 @@ namespace Testing
         {
             var device = DeviceDescriptor.GPUDevice(0);
 
-            Upsample.Test(SampleFolderPath, device);
+            var testImage = new Bitmap(Bitmap.FromFile(Path.Join(SampleFolderPath, "testImage.png")));
+
+            var result = Upsample.Test(testImage, device);
+
+            result.Save(Path.Join(SampleFolderPath, "upsample output.bmp")); // check image manually
         }
     }
 }
