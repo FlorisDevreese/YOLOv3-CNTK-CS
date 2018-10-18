@@ -51,11 +51,23 @@ namespace ONNX_model_test_app.ViewModels
         private bool changingCamera = false;
         private MediaCapture mediaCapture;
         private TinyYoloV2Model tinyYoloV2Model;
+        private uint modelInputWidht;
+        private uint modelInputheight;
 
-        #region Webcam pivot
         public async void LoadSettings()
         {
             loadingPageDone = false;
+
+            await LoadModel();
+
+            await LoadWebcam();
+
+            loadingPageDone = true;
+        }
+
+        #region Webcam pivot
+        private async Task LoadWebcam()
+        {
             mediaCapture = new MediaCapture();
 
             Devices = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
@@ -86,8 +98,6 @@ namespace ONNX_model_test_app.ViewModels
             }
             else
                 await ShowErrorMessage("No camera devices found");
-
-            loadingPageDone = true;
         }
 
         private async void CameraDeviceChanged()
@@ -174,8 +184,8 @@ namespace ONNX_model_test_app.ViewModels
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
 
                 // Get the SoftwareBitmap representation of the file
-                // convert bitmap to avoid this error: https://stackoverflow.com/questions/36865978/why-i-get-error-like-this-using-setbitmapasync
-                bitmap = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
+                var bitmapTransform = new BitmapTransform() { ScaledWidth = modelInputWidht, ScaledHeight = modelInputheight, InterpolationMode = BitmapInterpolationMode.Linear };
+                bitmap = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied, bitmapTransform, ExifOrientationMode.RespectExifOrientation, ColorManagementMode.ColorManageToSRgb);
             }
 
             // set the original image
@@ -202,6 +212,10 @@ namespace ONNX_model_test_app.ViewModels
             // todo check if this has to run on a seperate thread so that the UI threas isn't blocked.
             var modelFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/Models/Tiny-YOLOv2.onnx"));
             tinyYoloV2Model = await TinyYoloV2Model.CreateModel(modelFile);
+
+            // todo get the dimentions of the input of the model
+            modelInputWidht = 416;
+            modelInputheight = 416;
         }
         #endregion
 

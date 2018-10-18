@@ -115,7 +115,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel x:Name="ControlBar" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <StackPanel x:Name="ControlBar" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0 5 0 5">
                         <Button Click="{x:Bind ViewModel.OpenImageFromFile}" >
                             <StackPanel Orientation="Horizontal">
                                 <Viewbox>

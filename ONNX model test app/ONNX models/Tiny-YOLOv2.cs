@@ -23,7 +23,9 @@ namespace ONNX_model_test_app.ONNX_models
         }
     }
 
-    // todo the functionality below is only availble after the Windows 10 october update
+    // todo the functionality below is only availble after the Windows 10 october update. 
+    // info on implementation: https://docs.microsoft.com/en-us/windows/ai/integrate-model & https://docs.microsoft.com/en-us/uwp/api/windows.ai.machinelearning.learningmodel.inputfeatures
+    // examples see: C:\Users\flori\Documents\Code\Windows-Machine-Learning
     public sealed class TinyYoloV2Model
     {
         private LearningModel learningModel;
