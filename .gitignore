@@ -5,3 +5,4 @@ Testing/bin/*
 Testing/obj/*
 ONNX model test app/bin/*
 ONNX model test app/obj/*
+Output/*

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Testing.Utils;
 
@@ -36,7 +37,7 @@ namespace Testing.Tests
             var model = CNTKLib.Unpooling(poolingLayer, input, PoolingType.Max, new[] { 2, 2 }, new[] { 2, 2 });
 
             // create the input for the model
-            var modelInput = model.Arguments[0];
+            var modelInput = model.Arguments.First();
             var modelOutput = model.Output;
 
             var inputMap = Helper.CreateInputDataMap(inputImage, input, device);

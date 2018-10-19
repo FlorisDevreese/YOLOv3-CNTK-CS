@@ -1,11 +1,7 @@
 ﻿using CNTK;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Testing.Utils
 {
@@ -14,7 +10,7 @@ namespace Testing.Utils
         /// <summary>
         /// Deserialize the output of a network into an image.
         /// The output of a network is not serialized as RGB RGB RGB RGB...
-        /// but is instead serialized as: BBBB..., GGGG..., RRRR...
+        /// but is instead serialized as CHW (Channel Height Width (= BBBB..., GGGG..., RRRR...))
         /// So the RGB value of pixel x,y is:
         /// Red = outputArray[width * height * 2 + y * width + x]
         /// Green = outputArray[width * height + y * width + x]
@@ -26,7 +22,6 @@ namespace Testing.Utils
         /// <returns></returns>
         public static Bitmap CreateBitmapFromOutput(IList<float> outputArray, int width, int height)
         {
-            // todo: look if you can't convert this to the way it is done in the UWP project
             Bitmap outputImage = new Bitmap(width, height);
 
             for (int x = 0; x < width; x++)
@@ -42,7 +37,6 @@ namespace Testing.Utils
             }
             return outputImage;
         }
-
 
         /// <summary>
         /// Resizes an image
@@ -83,64 +77,28 @@ namespace Testing.Utils
         }
 
         /// <summary>
-        /// Extracts image pixels in CHW using parallelization
+        /// Extracts image pixels in CHW (Channel Height Width
         /// </summary>
         /// <param name="image">The bitmap image to extract features from</param>
-        /// <returns>A list of pixels in CHW order</returns>
-        public static List<float> ParallelExtractCHW(this Bitmap image)
+        /// <returns>A list of pixels in HWC order</returns>
+        public static List<float> ExtractCHW(this Bitmap image)
         {
-            // We use local variables to avoid contention on the image object through the multiple threads.
-            int channelStride = image.Width * image.Height;
-            int imageWidth = image.Width;
-            int imageHeight = image.Height;
-
-            var features = new byte[imageWidth * imageHeight * 3];
-            var bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, imageWidth, imageHeight), ImageLockMode.ReadOnly, image.PixelFormat);
-            IntPtr ptr = bitmapData.Scan0;
-            int bytes = Math.Abs(bitmapData.Stride) * bitmapData.Height;
-            byte[] rgbValues = new byte[bytes];
-
-            int stride = bitmapData.Stride;
-
-            // Copy the RGB values into the array.
-            System.Runtime.InteropServices.Marshal.Copy(ptr, rgbValues, 0, bytes);
-
-            // The mapping depends on the pixel format
-            // The mapPixel lambda will return the right color channel for the desired pixel
-            Func<int, int, int, int> mapPixel = GetPixelMapper(image.PixelFormat, stride);
-
-            Parallel.For(0, imageHeight, (int h) =>
+            var features = new List<float>(image.Width * image.Height * 3);
+            for (int c = 0; c < 3; c++)
             {
-                Parallel.For(0, imageWidth, (int w) =>
+                for (int h = 0; h < image.Height; h++)
                 {
-                    Parallel.For(0, 3, (int c) =>
+                    for (int w = 0; w < image.Width; w++)
                     {
-                        features[channelStride * c + imageWidth * h + w] = rgbValues[mapPixel(h, w, c)];
-                    });
-                });
-            });
+                        var pixel = image.GetPixel(w, h);
+                        float v = c == 0 ? pixel.B : c == 1 ? pixel.G : pixel.R;
 
-            image.UnlockBits(bitmapData);
-
-            return features.Select(b => (float)b).ToList();
-        }
-
-        /// <summary>
-        /// Returns a function for extracting the R-G-B values properly from an image based on its pixel format
-        /// </summary>
-        /// <param name="pixelFormat">The image's pixel format</param>
-        /// <param name="heightStride">The stride (row byte count)</param>
-        /// <returns>A function with signature (height, width, channel) returning the corresponding color value</returns>
-        private static Func<int, int, int, int> GetPixelMapper(PixelFormat pixelFormat, int heightStride)
-        {
-            switch (pixelFormat)
-            {
-                case PixelFormat.Format32bppArgb:
-                    return (h, w, c) => h * heightStride + w * 4 + c;  // bytes are B-G-R-A
-                case PixelFormat.Format24bppRgb:
-                default:
-                    return (h, w, c) => h * heightStride + w * 3 + c;  // bytes are B-G-R
+                        features.Add(v);
+                    }
+                }
             }
+
+            return features;
         }
 
         /// <summary>
@@ -153,18 +111,34 @@ namespace Testing.Utils
         /// <returns></returns>
         public static Dictionary<Variable, Value> CreateInputDataMap(Bitmap image, Variable inputVariable, DeviceDescriptor device)
         {
-            // Get shape data for the input variable
-            NDShape inputShape = inputVariable.Shape;
-            int imageWidth = inputShape[0];
-            int imageHeight = inputShape[1];
+            // Get shape data for the input variable, and optionally remove the free dimension
+            NDShape variableShape = inputVariable.Shape;
+            if (variableShape.HasFreeDimension)
+            {
+                // change the free dimension into a dimension of 1. (or else the Value.CreateBatch(..) will throw a "TotalSize cannot be determined" exception)
+                int[] newShape = new int[variableShape.Rank];
+                for(int i=0; i <variableShape.Rank; i++)
+                {
+                    int newDimension = variableShape[i];
+                    if (newDimension == NDShape.FreeDimension)
+                        newDimension  = 1;
+
+                    newShape[i] = newDimension;
+                }
+
+                variableShape = newShape;
+            }
+
+            int inputWidth = variableShape[0];
+            int inputHeight = variableShape[1];
 
             // Image preprocessing to match input requirements of the model.
-            var resized = image.Resize(imageWidth, imageHeight, true);
-            List<float> resizedCHW = resized.ParallelExtractCHW();
+            var resized = image.Resize(inputWidth, inputHeight, true);
+            List<float> resizedCHW = resized.ExtractCHW();
 
             // Create input data map
             var inputDataMap = new Dictionary<Variable, Value>();
-            var inputVal = Value.CreateBatch(inputShape, resizedCHW, device);
+            var inputVal = Value.CreateBatch(variableShape, resizedCHW, device);
             inputDataMap.Add(inputVariable, inputVal);
 
             return inputDataMap;

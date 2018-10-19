@@ -9,7 +9,7 @@ namespace Testing
 {
     class Program
     {
-        public static string SampleFolderPath = Path.Combine(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName, "SampleImages");
+        public static string RootPath = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.Parent.FullName;
 
         /// <summary>
         /// This is a project to quickly test out functions
@@ -18,12 +18,16 @@ namespace Testing
         static void Main(string[] args)
         {
             var device = DeviceDescriptor.GPUDevice(0);
+            
+            
+            var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\testImage.png")));
 
-            var testImage = new Bitmap(Bitmap.FromFile(Path.Join(SampleFolderPath, "testImage.png")));
+            //// Upsample
+            //var result = Upsample.Test(testImage, device);
+            //result.Save(Path.Join(RootPath, @"Output\upsample output.bmp"));
 
-            var result = Upsample.Test(testImage, device);
-
-            result.Save(Path.Join(SampleFolderPath, "upsample output.bmp")); // check image manually
+            // ONNX model
+            OnnxModel.TestModel(Path.Join(RootPath, @"ONNX model test app\Assets\Models\Tiny-YOLOv2.onnx"), testImage, device);
         }
     }
 }
