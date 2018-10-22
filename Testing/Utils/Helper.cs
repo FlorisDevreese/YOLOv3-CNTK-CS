@@ -1,7 +1,10 @@
 ﻿using CNTK;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Linq;
+using Testing.Models;
 
 namespace Testing.Utils
 {
@@ -142,6 +145,99 @@ namespace Testing.Utils
             inputDataMap.Add(inputVariable, inputVal);
 
             return inputDataMap;
+        }
+
+        public static float Sigmoid(float value)
+        {
+            var k = (float)Math.Exp(value);
+            return k / (1.0f + k);
+        }
+
+        public static float[] Softmax(float[] values)
+        {
+            var maxVal = values.Max();
+            var exp = values.Select(v => Math.Exp(v - maxVal));
+            var sumExp = exp.Sum();
+
+            return exp.Select(v => (float)(v / sumExp)).ToArray();
+        }
+
+        /// <summary>
+        /// More info about non-max suppression here: https://www.youtube.com/watch?v=A46HZGR5fMw&list=PLBAGcD3siRDjBU8sKRk0zX9pMz9qeVxud&t=6s&index=30
+        /// </summary>
+        /// <param name="boxes"></param>
+        /// <param name="limit"></param>
+        /// <param name="threshold"></param>
+        /// <returns></returns>
+        public static IList<BoundingBox> NonMaxSuppression(IList<BoundingBox> boxes, int limit, float threshold)
+        {
+            var activeCount = boxes.Count;
+            var isActiveBoxes = new bool[boxes.Count];
+
+            for (var i = 0; i < isActiveBoxes.Length; i++)
+                isActiveBoxes[i] = true;
+
+            var sortedBoxes = boxes.Select((b, i) => new { Box = b, Index = i })
+                                .OrderByDescending(b => b.Box.Confidence)
+                                .ToList();
+
+            var results = new List<BoundingBox>();
+
+            for (var i = 0; i < boxes.Count; i++)
+            {
+                if (isActiveBoxes[i])
+                {
+                    var boxA = sortedBoxes[i].Box;
+                    results.Add(boxA);
+
+                    if (results.Count >= limit)
+                        break;
+
+                    for (var j = i + 1; j < boxes.Count; j++)
+                    {
+                        if (isActiveBoxes[j])
+                        {
+                            var boxB = sortedBoxes[j].Box;
+
+                            if (IntersectionOverUnion(boxA.Rect, boxB.Rect) > threshold)
+                            {
+                                isActiveBoxes[j] = false;
+                                activeCount--;
+
+                                if (activeCount <= 0)
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (activeCount <= 0)
+                        break;
+                }
+            }
+
+            return results;
+        }
+
+        private static float IntersectionOverUnion(RectangleF a, RectangleF b)
+        {
+            var areaA = a.Width * a.Height;
+
+            if (areaA <= 0)
+                return 0;
+
+            var areaB = b.Width * b.Height;
+
+            if (areaB <= 0)
+                return 0;
+
+            var minX = Math.Max(a.Left, b.Left);
+            var minY = Math.Max(a.Top, b.Top);
+            var maxX = Math.Min(a.Right, b.Right);
+            var maxY = Math.Min(a.Bottom, b.Bottom);
+
+            var intersectionArea = Math.Max(maxY - minY, 0) * Math.Max(maxX - minX, 0);
+
+            return intersectionArea / (areaA + areaB - intersectionArea);
         }
     }
 }

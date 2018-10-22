@@ -18,16 +18,23 @@ namespace Testing
         static void Main(string[] args)
         {
             var device = DeviceDescriptor.GPUDevice(0);
-            
-            
-            var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\testImage.png")));
+
+
+            //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\cicles.png")));
+            //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\jump.png")));
+            //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\1.jpg")));
+            //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\3.jpg")));
+            //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\5.jpg")));
+            //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\6.png")));
+            var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\7.jpg")));
 
             //// Upsample
             //var result = Upsample.Test(testImage, device);
             //result.Save(Path.Join(RootPath, @"Output\upsample output.bmp"));
 
             // ONNX model
-            OnnxModel.TestModel(Path.Join(RootPath, @"ONNX model test app\Assets\Models\Tiny-YOLOv2.onnx"), testImage, device);
+            var result = OnnxModel.TestModel(Path.Join(RootPath, @"ONNX model test app\Assets\Models\Tiny-YOLOv2.onnx"), testImage, device);
+            result.Save(Path.Join(RootPath, @"Output\Tiny Yolov2 output.bmp"));
         }
     }
 }
