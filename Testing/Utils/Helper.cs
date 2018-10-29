@@ -115,22 +115,7 @@ namespace Testing.Utils
         public static Dictionary<Variable, Value> CreateInputDataMap(Bitmap image, Variable inputVariable, DeviceDescriptor device)
         {
             // Get shape data for the input variable, and optionally remove the free dimension
-            NDShape variableShape = inputVariable.Shape;
-            if (variableShape.HasFreeDimension)
-            {
-                // change the free dimension into a dimension of 1. (or else the Value.CreateBatch(..) will throw a "TotalSize cannot be determined" exception)
-                int[] newShape = new int[variableShape.Rank];
-                for(int i=0; i <variableShape.Rank; i++)
-                {
-                    int newDimension = variableShape[i];
-                    if (newDimension == NDShape.FreeDimension)
-                        newDimension  = 1;
-
-                    newShape[i] = newDimension;
-                }
-
-                variableShape = newShape;
-            }
+            NDShape variableShape = inputVariable.Shape.SubShape(0, 3);
 
             int inputWidth = variableShape[0];
             int inputHeight = variableShape[1];
@@ -153,6 +138,12 @@ namespace Testing.Utils
             return k / (1.0f + k);
         }
 
+        /// <summary>
+        /// Converts the array of (arbitrary) values into an array of probabilities
+        /// info see: https://en.wikipedia.org/wiki/Softmax_function
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
         public static float[] Softmax(float[] values)
         {
             var maxVal = values.Max();
