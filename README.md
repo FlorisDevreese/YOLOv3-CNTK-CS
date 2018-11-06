@@ -3,4 +3,4 @@ This is an ongoing project with the goal of implmenting YOLOv3 using [CNTK](http
 
 The implementation is based on [Tutorial on implmenting YOLO v3 from scratch in PyTorch](https://blog.paperspace.com/how-to-implement-a-yolo-object-detector-in-pytorch/)
 
-
+The project is currently on hold because I wait for [this](https://github.com/Microsoft/CNTK/issues/3497) issue to be resolved.
