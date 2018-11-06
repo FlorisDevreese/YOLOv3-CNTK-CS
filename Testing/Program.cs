@@ -26,20 +26,23 @@ namespace Testing
             //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\5.jpg")));
             //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\6.png")));
             //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\7.jpg")));
-            var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\dog-cycle-car.png")));
+            //var testImage = new Bitmap(Image.FromFile(Path.Join(RootPath, @"Test images\dog-cycle-car.png")));
 
             //// Upsample
             //var result = Upsample.Test(testImage, device);
             //result.Save(Path.Join(RootPath, @"Output\upsample output.bmp"));
 
             // ONNX models
-            var result = OnnxModelModels.TestTinyYoloV2(testImage, device);
-            result.Save(Path.Join(RootPath, @"Output\Tiny Yolov2 output.bmp"));
+            //var result = OnnxModelModels.TestTinyYoloV2(testImage, device);
+            //result.Save(Path.Join(RootPath, @"Output\Tiny Yolov2 output.bmp"));
 
-            //OnnxModelModels.RetrainTinyYoloV2(device);
+            OnnxModelModels.RetrainTinyYoloV2(device);
 
             // Testing Simple networks
             //SimpleNetworks.LogisticRegression(device);
+
+            // Test CNTK functions
+            //OpertationTester.TestElementTimes();
         }
     }
 }
